@@ -1,5 +1,6 @@
 'use strict';
 
+var _ = require('lodash');
 var Scope = require('../src/scope');
 
 describe('Scope', function() {
@@ -27,6 +28,46 @@ describe('Scope', function() {
             scope.$digest();
 
             expect(listenerFn).toHaveBeenCalled();
+        });
+
+        it('calls the watch function with the scoep as an argument', function() {
+            var watchFn = jasmine.createSpy();
+            var listenerFn = _.noop;
+
+            scope.$watch(watchFn, listenerFn);
+
+            scope.$digest();
+
+            expect(watchFn).toHaveBeenCalledWith(scope);
+        });
+
+        it('calls the listener function when the watched value changes', function() {
+            scope.someValue = 'a';
+            scope.counter = 0;
+
+            function watcher(scope) {
+                return scope.someValue;
+            }
+
+            function listener(newValue, oldValue, scope) {
+                scope.counter++;
+            }
+
+            scope.$watch(watcher, listener);
+
+            expect(scope.counter).toBe(0);
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            scope.someValue = 'b';
+            expect(scope.counter).toBe(1);
+
+            scope.$digest();
+            expect(scope.counter).toBe(2);
         });
     });
 });
