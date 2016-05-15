@@ -3,17 +3,25 @@
   "version": "0.1.0",
   "author": "Ty Kowalewski <tykowale@gmail.com>",
   "devDependencies": {
+    "browserify": "^13.0.1",
     "eslint": "^2.10.1",
     "jasmine-core": "^2.4.1",
-    "karma": "^0.13.22",
+    "karma": "^0.12.31",
+    "karma-browserify": "^5.0.5",
     "karma-eslint": "^2.1.0",
     "karma-jasmine": "^1.0.2",
     "karma-phantomjs-launcher": "^1.0.0",
+    "karma-verbose-reporter": "0.0.3",
     "phantomjs-prebuilt": "^2.1.7",
-    "sinon": "^1.17.4"
+    "sinon": "^1.17.4",
+    "watchify": "^3.7.0"
   },
   "scripts": {
     "lint": "eslint src test; exit 0",
     "test": "karma start"
+  },
+  "dependencies": {
+    "jquery": "^2.2.3",
+    "lodash": "^4.12.0"
   }
 }

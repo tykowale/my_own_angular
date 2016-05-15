@@ -1,14 +1,21 @@
 module.exports = function(config) {
     config.set({
-        frameworks: ['jasmine'],
+        basePath: '',
+        colors: true,
+        frameworks: ['browserify', 'jasmine'],
         files: [
             'src/**/*.js',
             'test/**/*.spec.js'
         ],
         preprocessors: {
-            'test/**/*.js': ['eslint'],
-            'src/**/*.js': ['eslint']
+            'test/**/*.js': ['eslint', 'browserify'],
+            'src/**/*.js': ['eslint', 'browserify']
         },
-        browsers: ['PhantomJS']
+        autoWatch: true,
+        reporters: ['verbose'],
+        browsers: ['PhantomJS'],
+        browserify: {
+            debug: true
+        }
     });
 }

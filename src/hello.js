@@ -1,7 +1,9 @@
+var _ = require('lodash');
+
 (function() {
     'use strict';
 
-    function sayHello(foo) {
-        return 'Hello, World!'
-    }
+    module.exports = function sayHello(to) {
+        return _.template('Hello, <%= name %>!')({name: to});
+    };
 })();
