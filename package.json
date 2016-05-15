@@ -1,0 +1,19 @@
+{
+  "name": "my-own-angularjs",
+  "version": "0.1.0",
+  "author": "Ty Kowalewski <tykowale@gmail.com>",
+  "devDependencies": {
+    "eslint": "^2.10.1",
+    "jasmine-core": "^2.4.1",
+    "karma": "^0.13.22",
+    "karma-eslint": "^2.1.0",
+    "karma-jasmine": "^1.0.2",
+    "karma-phantomjs-launcher": "^1.0.0",
+    "phantomjs-prebuilt": "^2.1.7",
+    "sinon": "^1.17.4"
+  },
+  "scripts": {
+    "lint": "eslint src test; exit 0",
+    "test": "karma start"
+  }
+}
