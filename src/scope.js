@@ -1,50 +1,58 @@
-(function() {
-    'use strict';
-    var _ = require('lodash');
+'use strict';
 
-    module.exports = Scope;
+var _ = require('lodash');
 
-    function Scope() {
-        this.$$watchers = [];
-    }
+module.exports = Scope;
 
-    function initWatchVal() {}
+function Scope() {
+    this.$$watchers = [];
+    this.$$lastDirtyWatch = null;
+}
 
-    Scope.prototype.$watch = function(watchFn, listenerFn) {
-        var watcher = {
-            watchFn: watchFn,
-            listenerFn: listenerFn || _.noop,
-            last: initWatchVal
-        };
+function initWatchVal() {}
 
-        this.$$watchers.push(watcher);
+Scope.prototype.$watch = function(watchFn, listenerFn) {
+    var watcher = {
+        watchFn: watchFn,
+        listenerFn: listenerFn || _.noop,
+        last: initWatchVal
     };
 
-    Scope.prototype.$$digestOnce = function() {
-        var self = this;
-        var newValue;
-        var oldValue;
-        var dirty;
+    this.$$watchers.push(watcher);
+};
 
-        _.forEach(this.$$watchers, function(watcher) {
-            newValue = watcher.watchFn(self);
-            oldValue = watcher.last;
+Scope.prototype.$$digestOnce = function() {
+    var self = this;
+    var newValue;
+    var oldValue;
+    var dirty;
 
-            if (newValue !== oldValue) {
-                watcher.last = newValue;
-                watcher.listenerFn(newValue, (oldValue === initWatchVal ? newValue : oldValue),
-                    self);
-                dirty = true;
-            }
-        });
+    _.forEach(this.$$watchers, function(watcher) {
+        newValue = watcher.watchFn(self);
+        oldValue = watcher.last;
 
-        return dirty;
-    };
+        if (newValue !== oldValue) {
+            self.$$lastDirtyWatch = watcher;
+            watcher.last = newValue;
+            watcher.listenerFn(newValue, (oldValue === initWatchVal ? newValue : oldValue),
+                self);
+            dirty = true;
+        } else if (self.$$lastDirtyWatch === watcher) {
+            return false;
+        }
+    });
 
-    Scope.prototype.$digest = function() {
-        var dirty;
-        do {
-            dirty = this.$$digestOnce();
-        } while (dirty);
-    };
-})();
+    return dirty;
+};
+
+Scope.prototype.$digest = function() {
+    var ttl = 10;
+    var dirty;
+    this.$$lastDirtyWatch = null;
+    do {
+        dirty = this.$$digestOnce();
+        if (dirty && !(ttl--)) {
+            throw '10 digest iterations reached';
+        }
+    } while (dirty);
+};
