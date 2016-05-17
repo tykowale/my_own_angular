@@ -182,5 +182,30 @@ describe('Scope', function() {
             scope.$digest();
             expect(watchExecutions).toBe(301);
         });
+
+        it('does not end digest so that new watches are not run', function() {
+            scope.aValue = 'abc';
+            scope.counter = 0;
+
+            scope.$watch(
+                function(scope) {
+                    return scope.aValue;
+                },
+                function(newValue, oldValue, scope) {
+                    scope.$watch(
+                        function(scope) {
+                            return scope.aValue;
+                        },
+                        function(newValue, oldValue, scope) {
+                            scope.counter++;
+                        }
+
+                    );
+                }
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+        });
     });
 });
