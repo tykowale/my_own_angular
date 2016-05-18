@@ -236,5 +236,31 @@ describe('Scope', function() {
             scope.$digest();
             expect(scope.counter).toBe(1);
         });
+
+        it('catches exceptions in watch functions and continues', function() {
+            scope.someValue = 'abc';
+            scope.counter = 0;
+
+            scope.$watch(function() {
+                throw 'Error';
+            }, _.noop);
+            scope.$watch(watcher, listener);
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+        });
+
+        it('catches exceptions in listener functions and continues', function() {
+            scope.someValue = 'a';
+            scope.counter = 0;
+
+            scope.$watch(watcher, function() {
+                throw 'Error';
+            });
+            scope.$watch(watcher, listener);
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+        });
     });
 });
