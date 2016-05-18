@@ -262,5 +262,24 @@ describe('Scope', function() {
             scope.$digest();
             expect(scope.counter).toBe(1);
         });
+
+        it('allows destroying a $watch with a removal function', function() {
+            scope.someValue = 'abc';
+            scope.counter = 0;
+
+            var destroyWatch = scope.$watch(watcher, listener);
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            scope.someValue = 'def';
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+
+            scope.someValue = 'ghi';
+            destroyWatch();
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+        });
     });
 });
