@@ -9,13 +9,16 @@ module.exports = function(config) {
         ],
         preprocessors: {
             'test/**/*.js': ['eslint', 'browserify'],
-            'src/**/*.js': ['eslint', 'browserify']
+            'src/**/*.js': ['eslint', 'browserify', 'coverage']
         },
         autoWatch: true,
-        reporters: ['verbose'],
+        reporters: ['verbose', 'coverage'],
         browsers: ['PhantomJS'],
         browserify: {
             debug: true
+        },
+        coverageReporter: {
+            type: 'text-summary'
         }
     });
 }

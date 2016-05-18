@@ -25,6 +25,7 @@
         "no-unused-vars": [
             "error",
             {"args": "after-used"}
-        ]
+        ],
+        "no-console": "off"
     }
 }
