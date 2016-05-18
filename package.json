@@ -5,11 +5,9 @@
   "devDependencies": {
     "browserify": "^13.0.1",
     "eslint": "^2.10.1",
-    "istanbul": "^0.4.3",
     "jasmine-core": "^2.4.1",
     "karma": "^0.12.31",
     "karma-browserify": "^5.0.5",
-    "karma-coverage": "^1.0.0",
     "karma-eslint": "^2.1.0",
     "karma-jasmine": "^1.0.2",
     "karma-phantomjs-launcher": "^1.0.0",
