@@ -4,14 +4,7 @@ var _ = require('lodash');
 var Scope = require('../src/scope');
 
 describe('Scope', function() {
-    it('can be constructed and used as an object', function() {
-        var scope = new Scope();
-        scope.aProperty = 1;
-
-        expect(scope.aProperty).toBe(1);
-    });
-
-    describe('digest', function() {
+    describe('$digest', function() {
         var scope;
 
         beforeEach(function() {
@@ -337,6 +330,93 @@ describe('Scope', function() {
 
             scope.$digest();
             expect(scope.counter).toBe(0);
+        });
+    });
+
+    describe('$eval', function() {
+        var scope;
+
+        function returnValue() {
+            return scope.aValue;
+        }
+
+        beforeEach(function() {
+            scope = new Scope();
+        });
+
+        it('executes $evaled function and returns result', function() {
+            scope.aValue = 42;
+
+            var result = scope.$eval(returnValue);
+
+            expect(result).toBe(42);
+        });
+
+        it('passes the second $eval arg straight through', function() {
+            scope.aValue = 44;
+
+            var result = scope.$eval(returnValue, 2);
+
+            expect(result).toBe(44);
+        });
+    });
+
+    describe('$apply', function() {
+        var scope;
+
+        beforeEach(function() {
+            scope = new Scope();
+        });
+
+        function returnValue(scope) {
+            return scope.aValue;
+        }
+
+        function increaseCounter(newValue, oldValue, scope) {
+            scope.counter++;
+        }
+
+        it('executes the given function and starts the digest', function() {
+            scope.aValue = 'someValue';
+            scope.counter = 0;
+
+            scope.$watch(returnValue, increaseCounter);
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            scope.$apply(function(scope) {
+                scope.aValue = 'someOtherValue';
+            });
+
+            expect(scope.counter).toBe(2);
+        });
+    });
+
+    describe('$evalAsync', function() {
+        var scope;
+
+        beforeEach(function() {
+            scope = new Scope();
+        });
+
+        it('executes given function later in the same cycle', function() {
+            scope.aValue = [1,2,3];
+            scope.asyncEvaluated = false;
+            scope.asyncEvaluatedImmediately = false;
+
+            scope.$watch(
+                function(scope) { return scope.aValue; },
+                function(newValue, oldValue, scope) {
+                    scope.$evalAsync(function(scope) {
+                        scope.asyncEvaluated = true;
+                    });
+                    scope.asyncEvaluatedImmediately = scope.asyncEvaluated;
+                });
+
+            scope.$digest();
+            expect(scope.asyncEvaluated).toBe(true);
+            expect(scope.asyncEvaluatedImmediately).toBe(false);
         });
     });
 });
