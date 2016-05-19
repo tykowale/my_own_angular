@@ -281,5 +281,62 @@ describe('Scope', function() {
             scope.$digest();
             expect(scope.counter).toBe(2);
         });
+
+        it('allows destroying a $watch during digest', function() {
+            scope.someValue = 'abc';
+
+            var watchCalls = [];
+
+            scope.$watch(function(scope) {
+                watchCalls.push('first');
+                return scope.someValue;
+            });
+
+            var destroyWatch = scope.$watch(
+                function() {
+                    watchCalls.push('second');
+                    destroyWatch();
+                }
+            );
+
+            scope.$watch(function(scope) {
+                watchCalls.push('third');
+                return scope.someValue;
+            });
+
+            scope.$digest();
+            expect(watchCalls).toEqual(['first', 'second', 'third', 'first', 'third']);
+        });
+
+        it('allows a $watch to destroy another during digest', function() {
+            scope.someValue = 'abc';
+            scope.counter = 0;
+
+            scope.$watch(watcher, function() {
+                destroyWatch();
+            });
+
+            var destroyWatch = scope.$watch(_.noop, _.noop);
+
+            scope.$watch(watcher, listener);
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+        });
+
+        it('allows destroying several $watches during digest', function() {
+            scope.someValue = 'abc';
+            scope.counter = 0;
+
+            var destroyWatch1 = scope.$watch(function() {
+                destroyWatch1();
+                destroyWatch2();
+            });
+
+            var destroyWatch2 = scope.$watch(watcher, listener);
+
+            scope.$digest();
+            expect(scope.counter).toBe(0);
+        });
     });
 });
