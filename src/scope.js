@@ -74,17 +74,23 @@ Scope.prototype.$$digestOnce = function() {
 Scope.prototype.$digest = function() {
     var ttl = 10;
     var dirty;
+
     this.$$lastDirtyWatch = null;
+
     do {
         while (this.$$asyncQueue.length) {
-            var asyncTask = this.$$asyncQueue.shift();
-            asyncTask.scope.$eval(asyncTask.expression);
+            try {
+                var asyncTask = this.$$asyncQueue.shift();
+                asyncTask.scope.$eval(asyncTask.expression);
+            } catch (e) {
+                console.error(e);
+            }
         }
         dirty = this.$$digestOnce();
-        if (dirty && !(ttl--)) {
+        if ((dirty || this.$$asyncQueue.length) && !(ttl--)) {
             throw '10 digest iterations reached';
         }
-    } while (dirty);
+    } while (dirty || this.$$asyncQueue.length);
 };
 
 Scope.prototype.$eval = function(expr, locals) {
@@ -100,5 +106,8 @@ Scope.prototype.$apply = function(expr) {
 };
 
 Scope.prototype.$evalAsync = function(expr) {
-    this.$$asyncQueue.push({scope: this, expression: expr});
+    this.$$asyncQueue.push({
+        scope: this,
+        expression: expr
+    });
 };
