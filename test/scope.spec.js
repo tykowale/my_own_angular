@@ -475,6 +475,19 @@ describe('Scope', function() {
                 done();
             });
         });
+
+        it('catches exceptions', function(done) {
+            scope.$watch(returnValue, increaseCounter);
+
+            scope.$evalAsync(function() {
+                throw 'Error';
+            });
+
+            setTimeout(function() {
+                expect(scope.counter).toBe(1);
+                done();
+            }, 50);
+        });
     });
 
     describe('$applyAsync', function() {
@@ -559,6 +572,25 @@ describe('Scope', function() {
                 done();
             }, 50);
         });
+
+        it('catches exceptions', function(done) {
+            scope.$applyAsync(function() {
+                throw 'Error';
+            });
+
+            scope.$applyAsync(function() {
+                throw 'Error';
+            });
+
+            scope.$applyAsync(function(scope) {
+                scope.applied = true;
+            });
+
+            setTimeout(function() {
+                expect(scope.applied).toBe(true);
+                done();
+            }, 50);
+        });
     });
 
     describe('$$postDigest', function() {
@@ -594,6 +626,20 @@ describe('Scope', function() {
 
             scope.$digest();
             expect(scope.watchedValue).toBe('changed value');
+        });
+
+        it('catches exceptions', function() {
+            var didRun = false;
+            scope.$$postDigest(function() {
+                throw 'Error';
+            });
+
+            scope.$$postDigest(function() {
+                didRun = true;
+            });
+
+            scope.$digest();
+            expect(didRun).toBe(true);
         });
     });
 });

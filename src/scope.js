@@ -104,8 +104,12 @@ Scope.prototype.$digest = function() {
     } while (dirty || this.$$asyncQueue.length);
     this.$clearPhase();
 
-    while(this.$$postDigestQueue.length) {
-        this.$$postDigestQueue.shift()();
+    while (this.$$postDigestQueue.length) {
+        try {
+            this.$$postDigestQueue.shift()();
+        } catch (e) {
+            console.error(e);
+        }
     }
 };
 
@@ -168,7 +172,11 @@ Scope.prototype.$applyAsync = function(expr) {
 
 Scope.prototype.$$flushApplyAsync = function() {
     while (this.$$applyAsyncQueue.length) {
-        this.$$applyAsyncQueue.shift()();
+        try {
+            this.$$applyAsyncQueue.shift()();
+        } catch (e) {
+            console.error(e);
+        }
     }
     this.$$applyAsyncId = null;
 };
