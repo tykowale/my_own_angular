@@ -15,7 +15,7 @@ describe('Scope', function() {
         scope.counter++;
     }
 
-    function returnValue() {
+    function returnValue(scope) {
         return scope.aValue;
     }
 
@@ -558,6 +558,42 @@ describe('Scope', function() {
                 expect(scope.counter).toBe(2);
                 done();
             }, 50);
+        });
+    });
+
+    describe('$$postDigest', function() {
+        it('runs after each digest', function() {
+            scope.$$postDigest(
+                function() {
+                    scope.counter++;
+                });
+
+            expect(scope.counter).toBe(0);
+            scope.$digest();
+
+            expect(scope.counter).toBe(1);
+            scope.$digest();
+
+            expect(scope.counter).toBe(1);
+        });
+
+        it('does not include $$postDigest in the digest', function() {
+            scope.aValue = 'original value';
+
+            scope.$$postDigest(function() {
+                scope.aValue = 'changed value';
+            });
+
+            scope.$watch(returnValue,
+                function(newValue, oldValue, scope) {
+                    scope.watchedValue = newValue;
+                });
+
+            scope.$digest();
+            expect(scope.watchedValue).toBe('original value');
+
+            scope.$digest();
+            expect(scope.watchedValue).toBe('changed value');
         });
     });
 });
