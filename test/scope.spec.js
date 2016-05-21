@@ -753,5 +753,17 @@ describe('Scope', function() {
 
             expect(scope.counter).toEqual(1);
         });
+
+        it('does not call the zero-watch listener when deregistered first', function() {
+            var destroyGroup = scope.$watchGroup(
+                [],
+                increaseCounter
+            );
+
+            destroyGroup();
+            scope.$digest();
+
+            expect(scope.counter).toEqual(0);
+        });
     });
 });
