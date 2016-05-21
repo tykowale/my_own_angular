@@ -184,3 +184,46 @@ Scope.prototype.$$flushApplyAsync = function() {
 Scope.prototype.$$postDigest = function(fn) {
     this.$$postDigestQueue.push(fn);
 };
+
+Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
+    var self = this;
+    var newValues = new Array(watchFns.length);
+    var oldValues = new Array(watchFns.length);
+    var changeReactionScheduled = false;
+    var firstRun = true;
+
+    if (watchFns.length === 0) {
+        self.$evalAsync(function() {
+            listenerFn(newValues, newValues, self);
+        });
+        return;
+    }
+
+    function watchGroupListener() {
+        if (firstRun) {
+            firstRun = false;
+            listenerFn(newValues, newValues, self);
+        } else {
+            listenerFn(newValues, oldValues, self);
+        }
+        changeReactionScheduled = false;
+    }
+
+    var destroyFunctions = _.map(watchFns, function(watchFn, index) {
+        return self.$watch(watchFn, function(newValue, oldValue) {
+            newValues[index] = newValue;
+            oldValues[index] = oldValue;
+
+            if (!changeReactionScheduled) {
+                changeReactionScheduled = true;
+                self.$evalAsync(watchGroupListener);
+            }
+        });
+    });
+
+    return function() {
+        _.forEach(destroyFunctions, function(destroyFunction) {
+            destroyFunction();
+        });
+    };
+};

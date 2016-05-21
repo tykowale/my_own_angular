@@ -19,6 +19,10 @@ describe('Scope', function() {
         return scope.aValue;
     }
 
+    function returnAnotherValue(scope) {
+        return scope.anotherValue;
+    }
+
     describe('$digest', function() {
         function watcher(scope) {
             return scope.someValue;
@@ -640,6 +644,114 @@ describe('Scope', function() {
 
             scope.$digest();
             expect(didRun).toBe(true);
+        });
+    });
+
+    describe('$watchGroup', function() {
+        it('takes watches as an array and calls listener with arrays', function() {
+            var gotNewValues, gotOldValues;
+
+            scope.aValue = 1;
+            scope.anotherValue = 2;
+
+            scope.$watchGroup([returnValue, returnAnotherValue],
+                function(newValues, oldValues) {
+                    gotNewValues = newValues;
+                    gotOldValues = oldValues;
+                }
+            );
+
+            scope.$digest();
+            expect(gotNewValues).toEqual([1, 2]);
+            expect(gotOldValues).toEqual([1, 2]);
+        });
+
+        it('only calls listener once per digest', function() {
+            scope.aValue = 1;
+            scope.anotherValue = 2;
+
+            scope.$watchGroup(
+                [returnValue, returnAnotherValue],
+                increaseCounter
+            );
+            scope.$digest();
+
+            expect(scope.counter).toEqual(1);
+        });
+
+        it('uses the same array of old and new values on the first run', function() {
+            var gotNewValues, gotOldValues;
+
+            scope.aValue = 1;
+            scope.anotherValue = 2;
+
+            scope.$watchGroup(
+                [returnValue, returnAnotherValue],
+                function(newValues, oldValues) {
+                    gotNewValues = newValues;
+                    gotOldValues = oldValues;
+                }
+            );
+
+            scope.$digest();
+            expect(gotNewValues).toBe(gotOldValues);
+        });
+
+        it('uses different arrays for old and new values on subsequent runs', function() {
+            var gotNewValues, gotOldValues;
+
+            scope.aValue = 1;
+            scope.anotherValue = 2;
+
+            scope.$watchGroup(
+                [returnValue, returnAnotherValue],
+                function(newValues, oldValues) {
+                    gotNewValues = newValues;
+                    gotOldValues = oldValues;
+                }
+            );
+            scope.$digest();
+
+            scope.anotherValue = 3;
+            scope.$digest();
+            expect(gotNewValues).toEqual([1, 3]);
+            expect(gotOldValues).toEqual([1, 2]);
+        });
+
+        it('calls the listener once when the watch array is empty', function() {
+            var gotNewValues, gotOldValues;
+
+            scope.$watchGroup(
+                [],
+                function(newValues, oldValues) {
+                    gotNewValues = newValues;
+                    gotOldValues = oldValues;
+                }
+            );
+
+            scope.$digest();
+
+            expect(gotNewValues).toEqual([]);
+            expect(gotOldValues).toEqual([]);
+        });
+
+        it('can be deregistered', function() {
+            scope.aValue = 1;
+            scope.anotherValue = 2;
+
+            var destroyGroup = scope.$watchGroup(
+                [returnValue, returnAnotherValue],
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toEqual(1);
+
+            scope.anotherValue = 3;
+            destroyGroup();
+            scope.$digest();
+
+            expect(scope.counter).toEqual(1);
         });
     });
 });
