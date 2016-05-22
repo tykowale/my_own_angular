@@ -232,3 +232,11 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
         });
     };
 };
+
+Scope.prototype.$new = function() {
+    var ChildScope = _.noop;
+    ChildScope.prototype = this;
+
+    var child = new ChildScope();
+    return child;
+};
