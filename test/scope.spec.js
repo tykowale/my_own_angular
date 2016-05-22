@@ -904,5 +904,42 @@ describe('Scope', function() {
             parent.$digest();
             expect(child.aValueWas).toBe('abc');
         });
+
+        it('digests from root on $apply', function() {
+            var parent = new Scope();
+            var child = parent.$new();
+            var child2 = child.$new();
+
+            parent.aValue = 'abc';
+            parent.counter = 0;
+            parent.$watch(
+                returnValue,
+                increaseCounter
+            );
+
+            child2.$apply(_.noop);
+            expect(parent.counter).toBe(1);
+        });
+
+        it('schedules a digest from root on $evalAsync', function(done) {
+            var parent = new Scope();
+            var child = parent.$new();
+            var child2 = child.$new();
+
+            parent.aValue = 'abc';
+            parent.counter = 0;
+
+            parent.$watch(
+                returnValue,
+                increaseCounter
+            );
+
+            child2.$evalAsync(_.noop);
+
+            setTimeout(function() {
+                expect(parent.counter).toBe(1);
+                done();
+            }, 50);
+        });
     });
 });
