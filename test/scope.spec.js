@@ -1226,5 +1226,58 @@ describe('Scope', function() {
             scope.$digest();
             expect(scope.counter).toBe(2);
         });
+
+        it('does not fail on NaNs in arrays', function() {
+            scope.aValue = [2, NaN, 3];
+
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+        });
+
+        it('notices an item replaced in an arguments object', function() {
+            (function() {
+                scope.aValue = arguments;
+            })(1, 2, 3);
+
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            scope.aValue[1] = 42;
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+        });
+
+        it('notices an item replaced in a NodeList object', function() {
+            document.documentElement.appendChild(document.createElement('div'));
+            scope.aValue = document.getElementsByTagName('div');
+
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            document.documentElement.appendChild(document.createElement('div'));
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+        });
     });
 });
