@@ -1150,5 +1150,81 @@ describe('Scope', function() {
             scope.$digest();
             expect(scope.counter).toBe(2);
         });
+
+        it('notices an item added to an array', function() {
+            scope.aValue = [1, 2, 3];
+
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            scope.aValue.push(4);
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+        });
+
+        it('notices an item removed from an array', function() {
+            scope.aValue = [1, 2, 3];
+
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            scope.aValue.shift();
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+        });
+
+        it('notices an item replaced in an array', function() {
+            scope.aValue = [1, 2, 3];
+
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            scope.aValue[1] = 42;
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+        });
+
+        it('notices items reordered in an array', function() {
+            scope.aValue = [2, 1, 3];
+
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            scope.aValue.sort();
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+        });
     });
 });
