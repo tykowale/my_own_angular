@@ -25,7 +25,7 @@ function isArrayLike(obj) {
     var length = obj.length;
 
     return length === 0 ||
-        (_.isNumber(length) && length > 0 && (length -1) in obj);
+        (_.isNumber(length) && length > 0 && (length - 1) in obj);
 }
 
 Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
@@ -302,7 +302,10 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
     var newValue;
     var oldValue;
     var oldLength;
+    var veryOldValue;
+    var trackVeryOldValue = (listenerFn.length > 1);
     var changeCount = 0;
+    var firstRun = true;
 
     var internalWatchFn = function(scope) {
         var newLength;
@@ -372,7 +375,16 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
     };
 
     var internalListenerFn = function() {
-        listenerFn(newValue, oldValue, self);
+        if (firstRun) {
+            listenerFn(newValue, newValue, self);
+            firstRun = false;
+        } else {
+            listenerFn(newValue, veryOldValue, self);
+        }
+
+        if (trackVeryOldValue) {
+            veryOldValue = _.clone(newValue);
+        }
     };
 
     return this.$watch(internalWatchFn, internalListenerFn);
