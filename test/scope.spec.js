@@ -1279,5 +1279,117 @@ describe('Scope', function() {
             scope.$digest();
             expect(scope.counter).toBe(2);
         });
+
+        it('notices when the value becomes an object', function() {
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            scope.aValue = {
+                a: 1
+            };
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+        });
+
+        it('notices when an attribute is added to an object', function() {
+            scope.aValue = {
+                a: 1
+            };
+
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            scope.aValue.b = 2;
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+        });
+
+        it('notices when an attribute is changed in an object', function() {
+            scope.aValue = {
+                a: 1
+            };
+
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            scope.aValue.a = 2;
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+        });
+
+        it('does not fail on NaN attributes in object', function() {
+            scope.aValue = {
+                a: NaN
+            };
+
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+        });
+
+        it('notices when an attribute is removed from an object', function() {
+            scope.aValue = {
+                a: 1
+            };
+
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+            expect(scope.counter).toBe(1);
+
+            delete scope.aValue.a;
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+
+            scope.$digest();
+            expect(scope.counter).toBe(2);
+        });
+
+        it('does not consider any object with a length property an array', function() {
+            scope.aValue = { length: 42, otherKey: 'abc' };
+
+            scope.$watchCollection(
+                returnValue,
+                increaseCounter
+            );
+
+            scope.$digest();
+
+            scope.aValue.key = 'def';
+            scope.$digest();
+
+            expect(scope.counter).toBe(2);
+        });
     });
 });

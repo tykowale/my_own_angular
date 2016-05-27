@@ -23,7 +23,9 @@ function isArrayLike(obj) {
         return false;
     }
     var length = obj.length;
-    return _.isNumber(length);
+
+    return length === 0 ||
+        (_.isNumber(length) && length > 0 && (length -1) in obj);
 }
 
 Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
@@ -299,11 +301,13 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
     var self = this;
     var newValue;
     var oldValue;
+    var oldLength;
     var changeCount = 0;
 
     var internalWatchFn = function(scope) {
-        newValue = watchFn(scope);
+        var newLength;
 
+        newValue = watchFn(scope);
         if (_.isObject(newValue)) {
             if (isArrayLike(newValue)) {
                 if (!_.isArray(oldValue)) {
@@ -323,6 +327,38 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
                         oldValue[i] = newItem;
                     }
                 });
+            } else {
+                if (!_.isObject(oldValue) || isArrayLike(oldValue)) {
+                    changeCount++;
+                    oldValue = {};
+                    oldLength = 0;
+                }
+
+                newLength = 0;
+                _.forOwn(newValue, function(newVal, key) {
+                    newLength++;
+                    if (oldValue.hasOwnProperty(key)) {
+                        var bothNaN = isNaN(newVal) && isNaN(oldValue[key]);
+
+                        if (!bothNaN && oldValue[key] !== newVal) {
+                            changeCount++;
+                            oldValue[key] = newVal;
+                        }
+                    } else {
+                        changeCount++;
+                        oldLength++;
+                        oldValue[key] = newVal;
+                    }
+                });
+                if (oldLength > newLength) {
+                    changeCount++;
+                    _.forOwn(oldValue, function(oldVal, key) {
+                        if (!newValue.hasOwnProperty(key)) {
+                            oldLength--;
+                            delete oldValue[key];
+                        }
+                    });
+                }
             }
         } else {
             if (!self.$$areEqual(newValue, oldValue, false)) {
