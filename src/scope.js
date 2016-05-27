@@ -13,6 +13,7 @@ function Scope() {
     this.$$postDigestQueue = [];
     this.$root = this;
     this.$$children = [];
+    this.$$listeners = {};
     this.$$phase = null;
 }
 
@@ -268,6 +269,7 @@ Scope.prototype.$new = function(isolated, parent) {
 
     parent.$$children.push(child);
     child.$$watchers = [];
+    child.$$listeners = {};
     child.$$children = [];
     child.$parent = parent;
 
@@ -388,4 +390,14 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
     };
 
     return this.$watch(internalWatchFn, internalListenerFn);
+};
+
+Scope.prototype.$on = function(eventName, listener) {
+    var listeners = this.$$listeners[eventName];
+
+    if (!listeners) {
+        this.$$listeners[eventName] = listeners = [];
+    }
+
+    listeners.push(listener);
 };
