@@ -1529,78 +1529,104 @@ describe('Scope', function() {
         });
 
         _.forEach(['$emit', '$broadcast'], function(method) {
-            describe(method, function() {
+            it('calls the listeners of the matching event on ' + method, function() {
+                var listener1 = jasmine.createSpy();
+                var listener2 = jasmine.createSpy();
 
-                it('calls the listeners of the matching event on ' + method, function() {
-                    var listener1 = jasmine.createSpy();
-                    var listener2 = jasmine.createSpy();
+                scope.$on('someEvent', listener1);
+                scope.$on('someOtherEvent', listener2);
 
-                    scope.$on('someEvent', listener1);
-                    scope.$on('someOtherEvent', listener2);
+                scope[method]('someEvent');
 
-                    scope[method]('someEvent');
-
-                    expect(listener1).toHaveBeenCalled();
-                    expect(listener2).not.toHaveBeenCalled();
-                });
-
-                it('passes the same event object to each listener on ' + method, function() {
-                    var listener1 = jasmine.createSpy();
-                    var listener2 = jasmine.createSpy();
-
-                    scope.$on('someEvent', listener1);
-                    scope.$on('someEvent', listener2);
-
-                    scope[method]('someEvent');
-
-                    var event1 = listener1.calls.mostRecent().args[0];
-                    var event2 = listener2.calls.mostRecent().args[0];
-
-                    expect(event1).toBe(event2);
-                });
-
-                it('passes additional arguments to listeners on ' + method, function() {
-                    var listener = jasmine.createSpy();
-                    scope.$on('someEvent', listener);
-
-                    scope[method]('someEvent', 'and', ['additional', 'arguments'], '...');
-
-                    expect(listener.calls.mostRecent().args[1]).toEqual('and');
-                    expect(listener.calls.mostRecent().args[2]).toEqual(['additional', 'arguments']);
-                    expect(listener.calls.mostRecent().args[3]).toEqual('...');
-                });
-
-                it('returns the event object on ' + method, function() {
-                    var returnedEvent = scope[method]('someEvent');
-
-                    expect(returnedEvent).toBeDefined();
-                    expect(returnedEvent.name).toEqual('someEvent');
-                });
-
-                it('can be deregistered ' + method, function() {
-                    var listener = jasmine.createSpy();
-                    var deregister = scope.$on('someEvent', listener);
-
-                    deregister();
-                    scope[method]('someEvent');
-
-                    expect(listener).not.toHaveBeenCalled();
-                });
-
-                it('does not skip the next listener when removed on ' + method, function() {
-                    var deregister;
-                    var listener = function() {
-                        deregister();
-                    };
-                    var nextListener = jasmine.createSpy();
-
-                    deregister = scope.$on('someEvent', listener);
-                    scope.$on('someEvent', nextListener);
-
-                    scope[method]('someEvent');
-                    expect(nextListener).toHaveBeenCalled();
-                });
+                expect(listener1).toHaveBeenCalled();
+                expect(listener2).not.toHaveBeenCalled();
             });
+
+            it('passes the same event object to each listener on ' + method, function() {
+                var listener1 = jasmine.createSpy();
+                var listener2 = jasmine.createSpy();
+
+                scope.$on('someEvent', listener1);
+                scope.$on('someEvent', listener2);
+
+                scope[method]('someEvent');
+
+                var event1 = listener1.calls.mostRecent().args[0];
+                var event2 = listener2.calls.mostRecent().args[0];
+
+                expect(event1).toBe(event2);
+            });
+
+            it('passes additional arguments to listeners on ' + method, function() {
+                var listener = jasmine.createSpy();
+                scope.$on('someEvent', listener);
+
+                scope[method]('someEvent', 'and', ['additional', 'arguments'], '...');
+
+                expect(listener.calls.mostRecent().args[1]).toEqual('and');
+                expect(listener.calls.mostRecent().args[2]).toEqual(['additional', 'arguments']);
+                expect(listener.calls.mostRecent().args[3]).toEqual('...');
+            });
+
+            it('returns the event object on ' + method, function() {
+                var returnedEvent = scope[method]('someEvent');
+
+                expect(returnedEvent).toBeDefined();
+                expect(returnedEvent.name).toEqual('someEvent');
+            });
+
+            it('can be deregistered ' + method, function() {
+                var listener = jasmine.createSpy();
+                var deregister = scope.$on('someEvent', listener);
+
+                deregister();
+                scope[method]('someEvent');
+
+                expect(listener).not.toHaveBeenCalled();
+            });
+
+            it('does not skip the next listener when removed on ' + method, function() {
+                var deregister;
+                var listener = function() {
+                    deregister();
+                };
+                var nextListener = jasmine.createSpy();
+
+                deregister = scope.$on('someEvent', listener);
+                scope.$on('someEvent', nextListener);
+
+                scope[method]('someEvent');
+                expect(nextListener).toHaveBeenCalled();
+            });
+        });
+        // end of forEach loop
+
+        it('propagtes up the scope hierarchy on $emit', function() {
+            var parentListener = jasmine.createSpy();
+            var scopeListener = jasmine.createSpy();
+
+            parent.$on('someEvent', parentListener);
+            scope.$on('someEvent', scopeListener);
+
+            scope.$emit('someEvent');
+
+            expect(scopeListener).toHaveBeenCalled();
+            expect(parentListener).toHaveBeenCalled();
+        });
+
+        it('propagtes up the same event on $emit', function() {
+            var parentListener = jasmine.createSpy();
+            var scopeListener = jasmine.createSpy();
+
+            parent.$on('someEvent', parentListener);
+            scope.$on('someEvent', scopeListener);
+
+            scope.$emit('someEvent');
+
+            var scopeEvent = scopeListener.calls.mostRecent().args[0];
+            var parentEvent = parentListener.calls.mostRecent().args[0];
+
+            expect(scopeEvent).toBe(parentEvent);
         });
     });
 });
