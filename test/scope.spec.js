@@ -1598,10 +1598,22 @@ describe('Scope', function() {
                 scope[method]('someEvent');
                 expect(nextListener).toHaveBeenCalled();
             });
-        });
-        // end of forEach loop
 
-        it('propagtes up the scope hierarchy on $emit', function() {
+            it('sets defaultPrevented when preventDefault called on ' + method, function() {
+                var listener = function(event) {
+                    event.preventDefault();
+                };
+
+                scope.$on('someEvent', listener);
+
+                var event = scope[method]('someEvent');
+
+                expect(event.defaultPrevented).toBe(true);
+            });
+        });
+        // end of combined emit and broadcast loop
+
+        it('propagates up the scope hierarchy on $emit', function() {
             var parentListener = jasmine.createSpy();
             var scopeListener = jasmine.createSpy();
 
@@ -1614,7 +1626,7 @@ describe('Scope', function() {
             expect(parentListener).toHaveBeenCalled();
         });
 
-        it('propagtes up the same event on $emit', function() {
+        it('propagates up the same event on $emit', function() {
             var parentListener = jasmine.createSpy();
             var scopeListener = jasmine.createSpy();
 
@@ -1629,7 +1641,7 @@ describe('Scope', function() {
             expect(scopeEvent).toBe(parentEvent);
         });
 
-        it('propagtes down the scope hierarchy on $broadcast', function() {
+        it('propagates down the scope hierarchy on $broadcast', function() {
             var scopeListener = jasmine.createSpy();
             var childListener = jasmine.createSpy();
             var isolatedChildListener = jasmine.createSpy();
@@ -1645,7 +1657,7 @@ describe('Scope', function() {
             expect(isolatedChildListener).toHaveBeenCalled();
         });
 
-        it('propagtes down the same event on $broadcast', function() {
+        it('propagates down the same event on $broadcast', function() {
             var scopeListener = jasmine.createSpy();
             var childListener = jasmine.createSpy();
 
@@ -1746,6 +1758,62 @@ describe('Scope', function() {
             scope.$broadcast('someEvent');
 
             expect(event.currentScope).toBe(null);
+        });
+
+        it('does not propagate to parents when stopped', function() {
+            var scopeListener = function(event) {
+                event.stopPropagation();
+            };
+            var parentListener = jasmine.createSpy();
+
+            scope.$on('someEvent', scopeListener);
+            parent.$on('someEvent', parentListener);
+
+            scope.$emit('someEvent');
+
+            expect(parentListener).not.toHaveBeenCalled();
+        });
+
+        it('is received by listeners on current scope after being stopped', function() {
+            var listener1 = function(event) {
+                event.stopPropagation();
+            };
+            var listener2 = jasmine.createSpy();
+
+            scope.$on('someEvent', listener1);
+            scope.$on('someEvent', listener2);
+
+            scope.$emit('someEvent');
+
+            expect(listener2).toHaveBeenCalled();
+        });
+
+        it('fires $destroy when destroyed', function() {
+            var listener = jasmine.createSpy();
+            scope.$on('$destroy', listener);
+
+            scope.$destroy();
+
+            expect(listener).toHaveBeenCalled();
+        });
+
+        it('fires $destroy on children destroyed', function() {
+            var listener = jasmine.createSpy();
+            child.$on('$destroy', listener);
+
+            scope.$destroy();
+
+            expect(listener).toHaveBeenCalled();
+        });
+
+        it('no longer calls listeners after destroyed', function() {
+            var listener = jasmine.createSpy();
+            scope.$on('myEvent', listener);
+
+            scope.$destroy();
+
+            scope.$emit('myEvent');
+            expect(listener).not.toHaveBeenCalled();
         });
     });
 });
