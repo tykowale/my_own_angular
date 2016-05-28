@@ -1610,6 +1610,20 @@ describe('Scope', function() {
 
                 expect(event.defaultPrevented).toBe(true);
             });
+
+            it('does not stop on exceptions on ' + method, function() {
+                var listener1 = function() {
+                    throw 'listener1 thowing an exception';
+                };
+
+                var listener2 = jasmine.createSpy();
+                scope.$on('someEvent', listener1);
+                scope.$on('someEvent', listener2);
+
+                scope[method]('someEvent');
+
+                expect(listener2).toHaveBeenCalled();
+            });
         });
         // end of combined emit and broadcast loop
 
