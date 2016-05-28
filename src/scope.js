@@ -400,20 +400,37 @@ Scope.prototype.$on = function(eventName, listener) {
     }
 
     listeners.push(listener);
+    return function() {
+        var index = listeners.indexOf(listener);
+
+        if (index >= 0) {
+            listeners.splice(index, 1);
+        }
+    };
 };
 
 Scope.prototype.$emit = function(eventName) {
-    var listeners = this.$$listeners[eventName] || [];
+    var additionalArgs = _.tail(arguments);
 
-    _.forEach(listeners, function(listener) {
-        listener();
-    });
+    return this.$$fireEventOnScope(eventName, additionalArgs);
 };
 
 Scope.prototype.$broadcast = function(eventName) {
+    var additionalArgs = _.tail(arguments);
+
+    return this.$$fireEventOnScope(eventName, additionalArgs);
+};
+
+Scope.prototype.$$fireEventOnScope = function(eventName, additionalArgs) {
+    var event = {
+        name: eventName
+    };
+    var listenerArgs = [event].concat(additionalArgs);
     var listeners = this.$$listeners[eventName] || [];
 
     _.forEach(listeners, function(listener) {
-        listener();
+        listener.apply(null, listenerArgs);
     });
+
+    return event;
 };
