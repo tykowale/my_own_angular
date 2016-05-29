@@ -71,4 +71,23 @@ describe('parse', function() {
             parse('"abc\'');
         }).toThrow();
     });
+
+    it('can parse a string with single quotes inside', function() {
+        var fn = parse("'a\\\'b'");
+        expect(fn()).toEqual('a\'b');
+    });
+
+    it('can parse a string with double quotes inside', function() {
+        var fn = parse('"a\\\"b"');
+        expect(fn()).toEqual('a\"b');
+    });
+
+    it('will parse a string with unicode escapes', function() {
+        var fn = parse('"\\u00A0"');
+        expect(fn()).toEqual('\u00A0');
+    });
+
+    it('will not parse a string with invalid unicode escapes', function() {
+        expect(function() { parse('"\\u00T0"'); }).toThrow();
+    });
 });
