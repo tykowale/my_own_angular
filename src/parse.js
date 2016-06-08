@@ -19,6 +19,16 @@ function parse(expr) {
     return parser.parse(expr);
 }
 
+function Parser(lexer) {
+    this.lexer = lexer;
+    this.ast = new AST(this.lexer);
+    this.astCompiler = new ASTCompiler(this.ast);
+}
+
+Parser.prototype.parse = function(text) {
+    return this.astCompiler.compile(text);
+};
+
 function Lexer() {}
 
 Lexer.prototype.lex = function(text) {
@@ -204,6 +214,8 @@ AST.prototype.primary = function() {
         return this.object();
     } else if (this.constants.hasOwnProperty(this.tokens[0].text)) {
         return this.constants[this.consume().text];
+    } else if (this.peek().identifier) {
+        return this.identifier();
     }
 
     return this.constant();
@@ -315,11 +327,16 @@ function ASTCompiler(astBuilder) {
 ASTCompiler.prototype.compile = function(text) {
     var ast = this.astBuilder.ast(text);
     this.state = {
-        body: []
+        vars: [],
+        body: [],
+        nextId: 0
     };
     this.recurse(ast);
 
-    return new Function(this.state.body.join(''));
+    return new Function('s', (this.state.vars.length ?
+        'var ' + this.state.vars.join(',') + ';' :
+        ''
+    ) + this.state.body.join(''));
 };
 
 ASTCompiler.prototype.recurse = function(ast) {
@@ -343,6 +360,10 @@ ASTCompiler.prototype.recurse = function(ast) {
                 return key + ':' + value;
             }, this));
             return '{' + properties.join(',') + '}';
+        case AST.Identifier:
+            var intoId = this.nextId();
+            this.if_('s', this.assign(intoId, this.nonComputedMember('s', ast.name)));
+            return intoId;
     }
 };
 
@@ -364,12 +385,19 @@ ASTCompiler.prototype.stringEscapeFn = function(c) {
     return '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4);
 };
 
-function Parser(lexer) {
-    this.lexer = lexer;
-    this.ast = new AST(this.lexer);
-    this.astCompiler = new ASTCompiler(this.ast);
-}
+ASTCompiler.prototype.nonComputedMember = function(left, right) {
+    return '(' + left + ').' + right;
+};
 
-Parser.prototype.parse = function(text) {
-    return this.astCompiler.compile(text);
+ASTCompiler.prototype.if_ = function(test, consequent) {
+    this.state.body.push('if(', test, '){', consequent, '}');
+};
+
+ASTCompiler.prototype.assign = function(id, value) {
+    return id + '=' + value + ';';
+};
+ASTCompiler.prototype.nextId = function() {
+    var id = 'v' + (this.state.nextId++);
+    this.state.vars.push(id);
+    return id;
 };
