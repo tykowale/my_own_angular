@@ -88,7 +88,9 @@ describe('parse', function() {
     });
 
     it('will not parse a string with invalid unicode escapes', function() {
-        expect(function() { parse('"\\u00T0"'); }).toThrow();
+        expect(function() {
+            parse('"\\u00T0"');
+        }).toThrow();
     });
 
     it('will parse null', function() {
@@ -133,17 +135,28 @@ describe('parse', function() {
 
     it('will parse a non-empty object', function() {
         var fn = parse('{"a key": 1, \'another-key\': 2}');
-        expect(fn()).toEqual({'a key': 1, 'another-key': 2});
+        expect(fn()).toEqual({
+            'a key': 1,
+            'another-key': 2
+        });
     });
 
     it('will parse an object with identifier keys', function() {
         var fn = parse('{a: 1, b: [2, 3], c: {d: 4}}');
-        expect(fn()).toEqual({a: 1, b: [2, 3], c: {d: 4}});
+        expect(fn()).toEqual({
+            a: 1,
+            b: [2, 3],
+            c: {
+                d: 4
+            }
+        });
     });
 
     it('looks up an attribute from the scope', function() {
         var fn = parse('aKey');
-        expect(fn({aKey: 42})).toBe(42);
+        expect(fn({
+            aKey: 42
+        })).toBe(42);
         expect(fn({})).toBeUndefined();
     });
 
@@ -156,6 +169,46 @@ describe('parse', function() {
         var fn = parse('this');
         var scope = {};
         expect(fn(scope)).toBe(scope);
+        expect(fn()).toBeUndefined();
+    });
+
+    it('looks up a 2-part identifier path from the scope', function() {
+        var fn = parse('aKey.anotherKey');
+        expect(fn({
+            aKey: {
+                anotherKey: 42
+            }
+        })).toBe(42);
+        expect(fn({
+            aKey: {}
+        })).toBeUndefined();
+        expect(fn({})).toBeUndefined();
+    });
+
+    it('looks up a 4-[art identifier path from the scope', function() {
+        var fn = parse('aKey.secondKey.thirdKey.fourthKey');
+        expect(fn({
+            aKey: {
+                secondKey: {
+                    thirdKey: {
+                        fourthKey: 42
+                    }
+                }
+            }
+        })).toBe(42);
+
+        expect(fn({
+            aKey: {
+                secondKey: {
+                    thirdKey: {}
+                }
+            }
+        })).toBeUndefined();
+
+        expect(fn({
+            aKey: {}
+        })).toBeUndefined();
+
         expect(fn()).toBeUndefined();
     });
 });
