@@ -44,7 +44,7 @@ Lexer.prototype.lex = function(text) {
             this.readNumber();
         } else if (this.is('\'"')) {
             this.readString(this.ch);
-        } else if (this.is('[],{}:.')) {
+        } else if (this.is('[],{}:.()')) {
             this.tokens.push({
                 text: this.ch
             });
@@ -197,6 +197,7 @@ AST.Identifier = 'Identifier';
 AST.ThisExpression = 'ThisExpression';
 AST.LocalsExpression = 'LocalsExpression';
 AST.MemberExpression = 'MemberExpression';
+AST.CallExpression = 'CallExpression';
 
 AST.prototype.ast = function(text) {
     this.tokens = this.lexer.lex(text);
@@ -226,7 +227,7 @@ AST.prototype.primary = function() {
     }
 
     var next;
-    while ((next = this.expect('.', '['))) {
+    while ((next = this.expect('.', '[', '('))) {
         if (next.text === '[') {
             primary = {
                 type: AST.MemberExpression,
@@ -235,13 +236,20 @@ AST.prototype.primary = function() {
                 computed: true
             };
             this.consume(']');
-        } else {
+        } else if (next.text === '.') {
             primary = {
                 type: AST.MemberExpression,
                 object: primary,
                 property: this.identifier(),
                 computed: false
             };
+        } else if (next.text === '(') {
+            primary = {
+                type: AST.CallExpression,
+                callee: primary,
+                arguments: this.parseArguments()
+            };
+            this.consume(')');
         }
     }
 
@@ -354,6 +362,18 @@ AST.prototype.consume = function(e) {
     return token;
 };
 
+AST.prototype.parseArguments = function() {
+    var args = [];
+
+    if(!this.peek(')')) {
+        do {
+            args.push(this.primary());
+        } while (this.expect(','));
+    }
+
+    return args;
+};
+
 function ASTCompiler(astBuilder) {
     this.astBuilder = astBuilder;
 }
@@ -418,6 +438,12 @@ ASTCompiler.prototype.recurse = function(ast) {
             }
 
             return intoId;
+        case AST.CallExpression:
+            var callee = this.recurse(ast.callee);
+            var args = _.map(ast.arguments, _.bind(function(arg) {
+                return this.recurse(arg);
+            }, this));
+            return callee + '&&' + callee + '(' + args.join(',') + ')';
     }
 };
 
