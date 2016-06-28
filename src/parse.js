@@ -25,6 +25,14 @@ function Parser(lexer) {
     this.astCompiler = new ASTCompiler(this.ast);
 }
 
+function ensureSafeMemberName(name) {
+    if (name === 'constructor' || name === '__proto__' ||
+        name === '__defineGetter__' || name === '__defineSetter__' ||
+        name === '__lookupGetter__' || name === '__lookupSetter__') {
+        throw 'Attempting to access a disallowed  eld in Angular expressions!';
+    }
+}
+
 Parser.prototype.parse = function(text) {
     return this.astCompiler.compile(text);
 };
@@ -402,11 +410,14 @@ ASTCompiler.prototype.compile = function(text) {
         nextId: 0
     };
     this.recurse(ast);
+    var fnString = 'var fn=function(s,l){' +
+        (this.state.vars.length ?
+            'var ' + this.state.vars.join(',') + ';' :
+            ''
+        ) + this.state.body.join('') +
+        '}; return fn;';
 
-    return new Function('s', 'l', (this.state.vars.length ?
-        'var ' + this.state.vars.join(',') + ';' :
-        ''
-    ) + this.state.body.join(''));
+    return new Function('ensureSafeMemberName', fnString)(ensureSafeMemberName);
 };
 
 ASTCompiler.prototype.recurse = function(ast, context, create) {
@@ -433,6 +444,7 @@ ASTCompiler.prototype.recurse = function(ast, context, create) {
             }, this));
             return '{' + properties.join(',') + '}';
         case AST.Identifier:
+            ensureSafeMemberName(ast.name);
             intoId = this.nextId();
             this.if_(this.getHasOwnProperty('l', ast.name), this.assign(intoId, this.nonComputedMember('l', ast.name)));
             if (create) {
@@ -460,6 +472,7 @@ ASTCompiler.prototype.recurse = function(ast, context, create) {
             }
             if (ast.computed) {
                 var right = this.recurse(ast.property);
+                this.addEnsureSafeMemberName(right);
                 if (create) {
                     this.if_(this.not(this.computedMember(left, right)),
                         this.assign(this.computedMember(left, right), '{}'));
@@ -471,6 +484,7 @@ ASTCompiler.prototype.recurse = function(ast, context, create) {
                     context.computed = true;
                 }
             } else {
+                ensureSafeMemberName(ast.property.name);
                 if (create) {
                     this.if_(this.not(this.nonComputedMember(left, ast.property.name)),
                         this.assign(this.nonComputedMember(left, ast.property.name), '{}'));
@@ -556,4 +570,8 @@ ASTCompiler.prototype.nextId = function() {
 
 ASTCompiler.prototype.getHasOwnProperty = function(object, property) {
     return object + '&&(' + this.escape(property) + ' in ' + object + ')';
+};
+
+ASTCompiler.prototype.addEnsureSafeMemberName = function(expr) {
+    this.state.body.push('ensureSafeMemberName(' + expr + ');');
 };
