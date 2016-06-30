@@ -456,85 +456,149 @@ describe('parse', function() {
     it('does not allow calling the function consctructor', function() {
         expect(function() {
             var fn = parse('aFunction.constructor("return window;")()');
-            fn({aFunction: function() {}});
+            fn({
+                aFunction: function() {}
+            });
         }).toThrow();
     });
 
     it('does not allow accessing __proto__', function() {
         expect(function() {
             var fn = parse('obj.__proto__');
-            fn({obj: {}});
+            fn({
+                obj: {}
+            });
         }).toThrow();
     });
 
     it('does not allow accessing __defineGetter__', function() {
         expect(function() {
             var fn = parse('obj.__defineGetter__("evil", fn)');
-            fn({obj: {}, fn: function() {}});
+            fn({
+                obj: {},
+                fn: function() {}
+            });
         }).toThrow();
     });
 
     it('does not allow accessing __defineSetter__', function() {
         expect(function() {
             var fn = parse('obj.__defineSetter__("evil", fn)');
-            fn({obj: {}, fn: function() {}});
+            fn({
+                obj: {},
+                fn: function() {}
+            });
         }).toThrow();
     });
 
     it('does not allow accessing __lookupGetter__', function() {
         expect(function() {
             var fn = parse('obj.__lookupGetter__("evil")');
-            fn({obj: {}, fn: function() {}});
+            fn({
+                obj: {},
+                fn: function() {}
+            });
         }).toThrow();
     });
 
     it('does not allow accessing __lookupSetter__', function() {
         expect(function() {
             var fn = parse('obj.__lookupSetter__("evil")');
-            fn({obj: {}, fn: function() {}});
+            fn({
+                obj: {},
+                fn: function() {}
+            });
         }).toThrow();
     });
 
     it('does not allow accessing window as computed property', function() {
         var fn = parse('anObject["wnd"]');
-        expect(function() {fn({anObject: {wnd: window}}); }).toThrow();
+        expect(function() {
+            fn({
+                anObject: {
+                    wnd: window
+                }
+            });
+        }).toThrow();
     });
 
     it('does not allow accessing window as a non-computed property', function() {
         var fn = parse('anObject.wnd');
-        expect(function() {fn({anObject: {wnd: window}}); }).toThrow();
+        expect(function() {
+            fn({
+                anObject: {
+                    wnd: window
+                }
+            });
+        }).toThrow();
     });
 
     it('does not allow passing window as function argument', function() {
         var fn = parse('aFunction(wnd)');
         expect(function() {
-            fn({aFunction: _.noop, wnd: window});
+            fn({
+                aFunction: _.noop,
+                wnd: window
+            });
         }).toThrow();
     });
 
     it('does not allow calling methods on window', function() {
         var fn = parse('wnd.scrollTo(0)');
         expect(function() {
-            fn({wnd: window});
+            fn({
+                wnd: window
+            });
         }).toThrow();
     });
 
     it('does not allow functions to return window', function() {
         var fn = parse('getWnd()');
-        expect(function() { fn({getWnd: _.constant(window)}); }).toThrow();
+        expect(function() {
+            fn({
+                getWnd: _.constant(window)
+            });
+        }).toThrow();
     });
 
     it('does not allow assigning window', function() {
         var fn = parse('wnd = anObject');
         expect(function() {
-            fn({anObject: window});
+            fn({
+                anObject: window
+            });
         }).toThrow();
     });
 
     it('does not allow referencing window', function() {
         var fn = parse('wnd');
         expect(function() {
-            fn({wnd: window});
+            fn({
+                wnd: window
+            });
+        }).toThrow();
+    });
+
+    it('does not allow calling functions on DOM elements', function() {
+        var fn = parse('el.setAttribute("evil", "true")');
+        expect(function() {
+            fn({
+                el: document.documentElement
+            });
+        }).toThrow();
+    });
+
+    it('does not allow calling the aliased function consctructor', function() {
+        var fn = parse('fnConstructor("return window;")');
+        expect(function() {
+            fn({fnConstructor: (_.noop).constructor });
+        }).toThrow();
+    });
+
+    it('does not allow calling functions on Object', function() {
+        var fn = parse('obj.create({})');
+        expect(function() {
+            fn({obj: Object});
         }).toThrow();
     });
 });
