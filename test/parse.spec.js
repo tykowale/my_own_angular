@@ -601,4 +601,14 @@ describe('parse', function() {
             fn({obj: Object});
         }).toThrow();
     });
+
+    it('does not allow calling call', function() {
+        var fn = parse('fun.call(obj)');
+        expect(function() { fn({fun: _.noop, obj: {}}); }).toThrow();
+    });
+
+    it('does not allow applying apply', function() {
+        var fn = parse('fun.apply(obj)');
+        expect(function() { fn({fun: _.noop, obj: {}}); }).toThrow();
+    });
 });

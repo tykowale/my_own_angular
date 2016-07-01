@@ -10,6 +10,9 @@ var ESCAPES = {
     '\'': '\'',
     '"': '"'
 };
+var CALL = Function.prototype.call;
+var APPLY = Function.prototype.apply;
+var BIND = Function.prototype.bind;
 
 module.exports = parse;
 
@@ -44,6 +47,18 @@ function ensureSafeObject(obj) {
             throw 'Referencing Function in Angular expressions is disallowed!';
         } else if (obj === Object) {
             throw 'Referencing Object in Angular expressions is disallowed';
+        }
+    }
+
+    return obj;
+}
+
+function ensureSafeFunction(obj) {
+    if (obj) {
+        if (obj.constructor === obj) {
+            throw 'Referencing Function in Angular expressions is disallowed!';
+        } else if (obj === CALL || obj === APPLY || obj === BIND) {
+            throw 'Referencing call, apply, or bind in Angular expressions is disallowed!';
         }
     }
 
@@ -434,7 +449,14 @@ ASTCompiler.prototype.compile = function(text) {
         ) + this.state.body.join('') +
         '}; return fn;';
 
-    return new Function('ensureSafeMemberName', 'ensureSafeObject', fnString)(ensureSafeMemberName, ensureSafeObject);
+    return new Function(
+        'ensureSafeMemberName',
+        'ensureSafeObject',
+        'ensureSafeFunction',
+        fnString)(
+        ensureSafeMemberName,
+        ensureSafeObject,
+        ensureSafeFunction);
 };
 
 ASTCompiler.prototype.recurse = function(ast, context, create) {
@@ -510,7 +532,7 @@ ASTCompiler.prototype.recurse = function(ast, context, create) {
                 }
                 this.if_(left,
                     this.assign(intoId,
-                    'ensureSafeObject(' + this.nonComputedMember(left, ast.property.name) + ')'));
+                        'ensureSafeObject(' + this.nonComputedMember(left, ast.property.name) + ')'));
                 if (context) {
                     context.name = ast.property.name;
                     context.computed = false;
@@ -532,6 +554,7 @@ ASTCompiler.prototype.recurse = function(ast, context, create) {
                     callee = this.nonComputedMember(callContext.context, callContext.name);
                 }
             }
+            this.addEnsureSafeFunction(callee);
             return callee + '&&ensureSafeObject(' + callee + '(' + args.join(',') + '))';
         case AST.AssignmentExpression:
             var leftContext = {};
@@ -600,4 +623,8 @@ ASTCompiler.prototype.addEnsureSafeMemberName = function(expr) {
 
 ASTCompiler.prototype.addEnsureSafeObject = function(expr) {
     this.state.body.push('ensureSafeObject(' + expr + ');');
+};
+
+ASTCompiler.prototype.addEnsureSafeFunction = function(expr) {
+    this.state.body.push('ensureSafeFunction(' + expr + ');');
 };
