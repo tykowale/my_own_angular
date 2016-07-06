@@ -69,5 +69,11 @@ describe('setupModuleLoader', function() {
                 angular.module('myModule');
             }).toThrow();
         });
+
+        it('does not allow a module to be called hasOwnProperty', function() {
+            expect(function() {
+                angular.module('hasOwnProperty', []);
+            }).toThrow();
+        });
     });
 });

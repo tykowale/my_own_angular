@@ -8,6 +8,10 @@ function setupModuleLoader(window) {
     var angular = ensure(window, 'angular', Object);
 
     var createModule = function(name, requires, modules) {
+        if (name === 'hasOwnProperty') {
+            throw 'hasOwnProperty is not a valid module name';
+        }
+
         var moduleInstance = {
             name: name,
             requires: requires
