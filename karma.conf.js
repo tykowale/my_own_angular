@@ -16,6 +16,11 @@ module.exports = function(config) {
         browsers: ['PhantomJS'],
         browserify: {
             debug: true
+        },
+        eslint: {
+            stopOnError: false,
+            stopOnWarning: false,
+            showWarnings: true
         }
     });
 }
