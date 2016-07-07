@@ -12,10 +12,13 @@ module.exports = function(config) {
             'src/**/*.js': ['eslint', 'browserify']
         },
         autoWatch: true,
-        reporters: ['verbose'],
+        reporters: ['spec'],
         browsers: ['PhantomJS'],
         browserify: {
             debug: true
+        },
+        specReporter: {
+            suppressSkipped: true
         },
         eslint: {
             stopOnError: false,
