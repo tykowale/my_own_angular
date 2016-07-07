@@ -33,7 +33,7 @@ fdescribe('injector', function() {
     it('does not allow a constant called hasOwnProperty', function() {
         var module = angular.module('myModule', []);
         module.constant('hasOwnProperty', false);
-        expect(function () {
+        expect(function() {
             createInjector(['myModule']);
         }).toThrow();
     });
@@ -88,6 +88,20 @@ fdescribe('injector', function() {
         angular.module('myModule', ['myOtherModule']);
         angular.module('myOtherModule', ['myModule']);
 
-        createInjector(['myModule'])
+        createInjector(['myModule']);
+    });
+
+    it('invokes an annotated function with dependency injection', function() {
+        var module = angular.module('myModule', []);
+        module.constant('a', 1);
+        module.constant('b', 2);
+        var injector = createInjector(['myModule']);
+
+        function fn(one, two) {
+            return one + two;
+        }
+
+        fn.$inject = ['a', 'b'];
+        expect(injector.invoke(fn)).toBe(3);
     });
 });
