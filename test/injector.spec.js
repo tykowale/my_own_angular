@@ -3,7 +3,7 @@
 var setupModuleLoader = require('../src/loader');
 var createInjector = require('../src/injector');
 
-fdescribe('injector', function() {
+describe('injector', function() {
     var angular;
 
     beforeEach(function() {
@@ -135,5 +135,19 @@ fdescribe('injector', function() {
         obj.fn.$inject = ['a'];
 
         expect(injector.invoke(obj.fn, obj)).toBe(3);
+    });
+
+    it('overrides dependencies with locals when invoking', function() {
+        var module = angular.module('myModule', []);
+        module.constant('a', 1);
+        module.constant('b', 2);
+        var injector = createInjector(['myModule']);
+
+        function fn(one, two) {
+            return one + two;
+        }
+
+        fn.$inject = ['a', 'b'];
+        expect(injector.invoke(fn, undefined, {b: 3})).toBe(4);
     });
 });
