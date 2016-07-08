@@ -1,6 +1,9 @@
 'use strict';
 
 var _ = require('lodash');
+var FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m;
+var FN_ARG = /^\s*(\S+)\s*$/;
+var STRIP_COMMENTS = /(\/\/.*$)|(\/\*.*?\*\/)/mg;
 
 function createInjector(modulesToLoad) {
     var cache = {};
@@ -14,6 +17,22 @@ function createInjector(modulesToLoad) {
             cache[key] = value;
         }
     };
+
+    function annotate(fn) {
+        if (_.isArray(fn)) {
+            return fn.slice(0, fn.length - 1);
+        } else if (fn.$inject) {
+            return fn.$inject;
+        } else if (!fn.length) {
+            return [];
+        } else {
+            var source = fn.toString().replace(STRIP_COMMENTS, '');
+            var argDeclaration = source.toString().match(FN_ARGS);
+            return _.map(argDeclaration[1].split(','), function(argName) {
+                return argName.match(FN_ARG)[1];
+            });
+        }
+    }
 
     function invoke(fn, self, locals) {
         var args = _.map(fn.$inject, function(token) {
@@ -47,6 +66,7 @@ function createInjector(modulesToLoad) {
         get: function(key) {
             return cache[key];
         },
+        annotate: annotate,
         invoke: invoke
     };
 }
