@@ -13,12 +13,19 @@ function setupModuleLoader(window) {
         }
 
         var invokeQueue = [];
+
+        var invokeLater = function (method) {
+            return function() {
+                invokeQueue.push([method, arguments]);
+                return moduleInstance;
+            };
+        };
+
         var moduleInstance = {
             name: name,
             requires: requires,
-            constant: function(key, value) {
-                invokeQueue.push(['constant', [key, value]]);
-            },
+            constant: invokeLater('constant'),
+            provider: invokeLater('provider'),
             _invokeQueue: invokeQueue
         };
 

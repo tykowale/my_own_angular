@@ -324,4 +324,20 @@ describe('injector', function() {
             expect(instance.result).toBe(4);
         });
     });
+
+    fdescribe('provider', function() {
+        it('allows registering a provider and uses its `$get`', function() {
+            var module = angular.module('myModule', []);
+            module.provider('a', {
+                $get: function() {
+                    return 42;
+                }
+            });
+
+            var injector = createInjector(['myModule']);
+
+            expect(injector.has('a')).toBe(true);
+            expect(injector.get('a')).toBe(42);
+        });
+    });
 });
