@@ -386,9 +386,15 @@ describe('injector', function() {
 
         it('notifies the user about a circular dependency', function() {
             var module = angular.module('myModule', []);
-            module.provider('a', {$get: function(b) {}});
-            module.provider('b', {$get: function(c) {}});
-            module.provider('c', {$get: function(a) {}});
+            module.provider('a', {
+                $get: function(b) {}
+            });
+            module.provider('b', {
+                $get: function(c) {}
+            });
+            module.provider('c', {
+                $get: function(a) {}
+            });
 
             var injector = createInjector(['myModule']);
 
@@ -399,9 +405,11 @@ describe('injector', function() {
 
         it('cleans up the circular marker when instantiation fails', function() {
             var module = angular.module('myModule', []);
-            module.provider('a', {$get: function() {
-                throw 'Failing instantiation!';
-            }});
+            module.provider('a', {
+                $get: function() {
+                    throw 'Failing instantiation!';
+                }
+            });
 
             var injector = createInjector(['myModule']);
 
@@ -411,6 +419,35 @@ describe('injector', function() {
             expect(function() {
                 injector.get('a');
             }).toThrow('Failing instantiation!');
+        });
+
+        it('instantiates a provider ig given as a constructor function', function() {
+            var module = angular.module('myModule', []);
+
+            module.provider('a', function AProvider() {
+                this.$get = function() {
+                    return 42;
+                };
+            });
+
+            var injector = createInjector(['myModule']);
+
+            expect(injector.get('a')).toBe(42);
+        });
+
+        it('injects the given provider constructor function', function() {
+            var module = angular.module('myModule', []);
+
+            module.constant('b', 2);
+            module.provider('a', function AProvider() {
+                this.$get = function(b) {
+                    return 1 + b;
+                };
+            });
+
+            var injector = createInjector(['myModule']);
+
+            expect(injector.get('a')).toBe(3);
         });
     });
 });
