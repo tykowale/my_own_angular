@@ -4,11 +4,13 @@ var _ = require('lodash');
 var FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m;
 var FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
 var STRIP_COMMENTS = /(\/\/.*$)|(\/\*.*?\*\/)/mg;
+var INSTANTIATING = {};
 
 function createInjector(modulesToLoad, strictDi) {
     var providerCache = {};
     var instanceCache = {};
     var loadedModules = {};
+    var path = [];
     strictDi = (strictDi === true);
 
     var $provide = {
@@ -69,11 +71,25 @@ function createInjector(modulesToLoad, strictDi) {
 
     function getService(name) {
         if (instanceCache.hasOwnProperty(name)) {
+            if (instanceCache[name] === INSTANTIATING) {
+                throw new Error('Circular dependency found: ' +
+                    name + ' <- ' + path.join(' <- '));
+            }
             return instanceCache[name];
         } else if (providerCache.hasOwnProperty(name + 'Provider')) {
-            var provider = providerCache[name + 'Provider'];
-            var instance = instanceCache[name] = invoke(provider.$get);
-            return instance;
+            path.unshift(name);
+            instanceCache[name] = INSTANTIATING;
+            try {
+                var provider = providerCache[name + 'Provider'];
+                var instance = instanceCache[name] = invoke(provider.$get);
+
+                return instance;
+            } finally {
+                path.shift();
+                if (instanceCache[name] === INSTANTIATING) {
+                    delete instanceCache[name];
+                }
+            }
         }
     }
 
@@ -93,7 +109,7 @@ function createInjector(modulesToLoad, strictDi) {
     return {
         has: function(key) {
             return instanceCache.hasOwnProperty(key) ||
-            providerCache.hasOwnProperty(key + 'Provider');
+                providerCache.hasOwnProperty(key + 'Provider');
         },
         get: getService,
         annotate: annotate,
