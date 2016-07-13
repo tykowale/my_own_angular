@@ -327,7 +327,7 @@ describe('injector', function() {
         });
     });
 
-    fdescribe('provider', function() {
+    describe('provider', function() {
         it('allows registering a provider and uses its `$get`', function() {
             var module = angular.module('myModule', []);
             module.provider('a', {
@@ -534,6 +534,18 @@ describe('injector', function() {
             expect(function() {
                 injector.get('aProvider');
             }).toThrow();
+        });
+
+        it('registers constants first to make them available to providers', function() {
+            var module = angular.module('myModule', []);
+
+            module.provider('a', function AProvider(b) {
+                this.$get = _.constant(b);
+            });
+            module.constant('b', 42);
+
+            var injector = createInjector(['myModule']);
+            expect(injector.get('a')).toBe(42);
         });
     });
 });
