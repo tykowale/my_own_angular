@@ -7,7 +7,7 @@ function setupModuleLoader(window) {
 
     var angular = ensure(window, 'angular', Object);
 
-    var createModule = function(name, requires, modules) {
+    var createModule = function(name, requires, modules, configFn) {
         if (name === 'hasOwnProperty') {
             throw 'hasOwnProperty is not a valid module name';
         }
@@ -15,7 +15,7 @@ function setupModuleLoader(window) {
         var invokeQueue = [];
         var configBlocks = [];
 
-        var invokeLater = function (service, method, arrayMethod, queue) {
+        var invokeLater = function(service, method, arrayMethod, queue) {
             return function() {
                 queue = queue || invokeQueue;
                 queue[arrayMethod || 'push']([service, method, arguments]);
@@ -33,6 +33,10 @@ function setupModuleLoader(window) {
             _configBlocks: configBlocks
         };
 
+        if (configFn) {
+            moduleInstance.config(configFn);
+        }
+
         modules[name] = moduleInstance;
 
         return moduleInstance;
@@ -49,9 +53,9 @@ function setupModuleLoader(window) {
     ensure(angular, 'module', function() {
         var modules = {};
 
-        return function(name, requires) {
+        return function(name, requires, configFn) {
             if (requires) {
-                return createModule(name, requires, modules);
+                return createModule(name, requires, modules, configFn);
             }
 
             return getModule(name, modules);

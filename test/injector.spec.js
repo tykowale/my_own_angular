@@ -647,5 +647,15 @@ describe('injector', function() {
 
             expect(injector.get('a')).toBe(42);
         });
+
+        it('runs a config block added during module registration', function() {
+            var module = angular.module('myModule', [], function($provide) {
+                $provide.constant('a', 42);
+            });
+
+            var injector = createInjector(['myModule']);
+
+            expect(injector.get('a')).toBe(42);
+        });
     });
 });
