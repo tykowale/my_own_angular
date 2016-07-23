@@ -26,7 +26,7 @@ function createInjector(modulesToLoad, strictDi) {
     function enforceReturnValue(factoryFn) {
         return function() {
             var value = instanceInjector.invoke(factoryFn);
-            if(_.isUndefined(value)) {
+            if (_.isUndefined(value)) {
                 throw 'factory must return a value';
             }
             return value;
@@ -58,6 +58,19 @@ function createInjector(modulesToLoad, strictDi) {
             this.factory(key, function() {
                 return instanceInjector.instantiate(Constructor);
             });
+        },
+        decorator: function(serviceName, decoratorFn) {
+            var provider = providerInjector.get(serviceName + 'Provider');
+            var original$get = provider.$get;
+            provider.$get = function() {
+                var instance = instanceInjector.invoke(original$get, provider);
+
+                instanceInjector.invoke(decoratorFn, null, {
+                    $delegate: instance
+                });
+
+                return instance;
+            };
         }
     };
 
