@@ -1,4 +1,5 @@
 var hashKey = require('../src/hash_map').hashKey;
+var HashMap = require('../src/hash_map').HashMap;
 var _ = require('lodash');
 
 describe('hash', function() {
@@ -113,6 +114,31 @@ describe('hash', function() {
                     return this.myKey;
                 }
             })).toEqual('object:1738');
+        });
+    });
+
+    describe('HashMap', function() {
+        it('suppoers put and get of primitives', function() {
+            var map = new HashMap();
+            map.put(42, 'fourty two');
+            expect(map.get(42)).toEqual('fourty two');
+        });
+
+        it('supports put and get of objects with kashKey semantics', function() {
+            var map = new HashMap();
+            var obj = {};
+            map.put(obj, 'my value');
+            expect(map.get(obj)).toEqual('my value');
+            expect(map.get({})).toBeUndefined();
+        });
+
+        it('supports remove', function() {
+            var map = new HashMap();
+
+            map.put(42, 'fourty two');
+            map.remove(42);
+
+            expect(map.get(42)).toBeUndefined();
         });
     });
 });
