@@ -103,7 +103,7 @@ describe('hash', function() {
 
         it('supports a function $$hashKey', function() {
             expect(hashKey({
-                hashKey: _.constant(42)
+                $$hashKey: _.constant(42)
             })).toEqual('object:42');
         });
 
