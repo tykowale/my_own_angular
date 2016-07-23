@@ -755,5 +755,16 @@ describe('injector', function() {
 
             expect(result).toBe(42);
         });
+
+        it('only loads function modules once', function() {
+            var loadedTimes = 0;
+            var functionModule = function() {
+                loadedTimes++;
+            };
+
+            angular.module('myModule', [functionModule, functionModule]);
+            createInjector(['myModule']);
+            expect(loadedTimes).toBe(1);
+        });
     });
 });
