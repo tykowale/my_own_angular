@@ -1,13 +1,15 @@
 'use strict';
 
 var _ = require('lodash');
-var Scope = require('../src/scope');
+var publishExternalAPI = require('../src/angular_public');
+var createInjector = require('../src/injector');
 
 describe('Scope', function() {
     var scope;
 
     beforeEach(function() {
-        scope = new Scope();
+        publishExternalAPI();
+        scope = createInjector(['ng']).get('$rootScope');
         scope.counter = 0;
     });
 
@@ -768,8 +770,13 @@ describe('Scope', function() {
     });
 
     describe('inheritance', function() {
+        var parent;
+        beforeEach(function() {
+            publishExternalAPI();
+            parent = createInjector(['ng']).get('$rootScope');
+        });
+
         it('inherits the parents properties', function() {
-            var parent = new Scope();
             parent.aValue = [1, 2, 3];
 
             var child = parent.$new();
@@ -778,7 +785,6 @@ describe('Scope', function() {
         });
 
         it('does not cause a parent to inherit its properties', function() {
-            var parent = new Scope();
             var child = parent.$new();
 
             child.aValue = [1, 2, 3];
@@ -787,7 +793,6 @@ describe('Scope', function() {
         });
 
         it('can watch a property in the parent', function() {
-            var parent = new Scope();
             var child = parent.$new();
             parent.aValue = [1, 2, 3];
             child.counter = 0;
@@ -808,7 +813,7 @@ describe('Scope', function() {
         });
 
         it('can be nested at any depth', function() {
-            var a = new Scope();
+            var a = parent;
             var aa = a.$new();
             var aaa = aa.$new();
             var aab = aa.$new();
@@ -831,7 +836,6 @@ describe('Scope', function() {
         });
 
         it('shadows a parents property with the same name', function() {
-            var parent = new Scope();
             var child = parent.$new();
 
             parent.name = 'Joe';
@@ -843,7 +847,6 @@ describe('Scope', function() {
         });
 
         it('does not shadow members of parent scope attributes', function() {
-            var parent = new Scope();
             var child = parent.$new();
 
             parent.user = {
@@ -856,7 +859,6 @@ describe('Scope', function() {
         });
 
         it('does not digest its parent(s)', function() {
-            var parent = new Scope();
             var child = parent.$new();
 
             parent.aValue = 'abc';
@@ -872,7 +874,6 @@ describe('Scope', function() {
         });
 
         it('keeps a record of its children', function() {
-            var parent = new Scope();
             var child1 = parent.$new();
             console.error(child1);
             var child2 = parent.$new();
@@ -890,7 +891,6 @@ describe('Scope', function() {
         });
 
         it('digests its children', function() {
-            var parent = new Scope();
             var child = parent.$new();
 
             parent.aValue = 'abc';
@@ -906,7 +906,6 @@ describe('Scope', function() {
         });
 
         it('digests from root on $apply', function() {
-            var parent = new Scope();
             var child = parent.$new();
             var child2 = child.$new();
 
@@ -922,7 +921,6 @@ describe('Scope', function() {
         });
 
         it('schedules a digest from root on $evalAsync', function(done) {
-            var parent = new Scope();
             var child = parent.$new();
             var child2 = child.$new();
 
@@ -943,7 +941,6 @@ describe('Scope', function() {
         });
 
         it('does not have access to parent attributes when isolated', function() {
-            var parent = new Scope();
             var child = parent.$new(true);
 
             parent.aValue = 'abc';
@@ -952,7 +949,6 @@ describe('Scope', function() {
         });
 
         it('cannot watch parent attributes when isolated', function() {
-            var parent = new Scope();
             var child = parent.$new(true);
 
             parent.aValue = 'abc';
@@ -968,7 +964,6 @@ describe('Scope', function() {
         });
 
         it('digests its isolated children', function() {
-            var parent = new Scope();
             var child = parent.$new(true);
 
             child.aValue = 'abc';
@@ -984,7 +979,6 @@ describe('Scope', function() {
         });
 
         it('digests from root on $apply when isolated', function(done) {
-            var parent = new Scope();
             var child = parent.$new(true);
             var child2 = child.$new();
 
@@ -1005,7 +999,6 @@ describe('Scope', function() {
         });
 
         it('executes $evalAsync functions on isolated scopes', function(done) {
-            var parent = new Scope();
             var child = parent.$new(true);
 
             child.$evalAsync(function(scope) {
@@ -1019,7 +1012,6 @@ describe('Scope', function() {
         });
 
         it('executes $$postDigest functions on isolated scopes', function() {
-            var parent = new Scope();
             var child = parent.$new(true);
 
             child.$$postDigest(function() {
@@ -1032,7 +1024,6 @@ describe('Scope', function() {
         });
 
         it('executes $applyAsync functions on isolated scopes', function() {
-            var parent = new Scope();
             var child = parent.$new(true);
             var applied = false;
 
@@ -1046,8 +1037,8 @@ describe('Scope', function() {
         });
 
         it('can take some other scope as the parent', function() {
-            var prototypeParent = new Scope();
-            var hierarchyParent = new Scope();
+            var prototypeParent = parent.$new();
+            var hierarchyParent = parent.$new();
             var child = prototypeParent.$new(false, hierarchyParent);
 
             prototypeParent.a = 42;
@@ -1066,7 +1057,6 @@ describe('Scope', function() {
         });
 
         it('is no longer digested when $destroy has been called', function() {
-            var parent = new Scope();
             var child = parent.$new();
 
             child.aValue = [1, 2, 3];
@@ -1092,6 +1082,14 @@ describe('Scope', function() {
     });
 
     describe('$watchCollection', function() {
+        var scope;
+
+        beforeEach(function() {
+            publishExternalAPI();
+            scope = createInjector(['ng']).get('$rootScope');
+            scope.counter = 0;
+        });
+
         it('works like a normal watch for non-collections', function() {
             var valueProvided;
 
@@ -1487,7 +1485,8 @@ describe('Scope', function() {
         var isolatedChild;
 
         beforeEach(function() {
-            parent = new Scope();
+            publishExternalAPI();
+            parent = createInjector(['ng']).get('$rootScope');
             scope = parent.$new();
             child = scope.$new();
             isolatedChild = scope.$new(true);
