@@ -3,10 +3,13 @@
 var publishExternalAPI = require('../src/angular_public');
 var createInjector = require('../src/injector');
 
-describe('filter filter', function() {
+describe("filter filter", function() {
+
+    var parse;
 
     beforeEach(function() {
         publishExternalAPI();
+        parse = createInjector(['ng']).get('$parse');
     });
 
     it('is available', function() {
@@ -27,7 +30,7 @@ describe('filter filter', function() {
     it('can filter an array of strings with a string', function() {
         var fn = parse('arr | filter:"a"');
         expect(fn({
-            arr: ['a', 'b', 'a']
+            arr: ["a", "b", "a"]
         })).toEqual(['a', 'a']);
     });
 
@@ -366,7 +369,20 @@ describe('filter filter', function() {
         }];
         var fn = parse('arr | filter:{user: {name: "Bob"}}');
         expect(fn({
-            arr: items
+            arr: [{
+                user: 'Bob'
+            }, {
+                user: {
+                    name: 'Bob'
+                }
+            }, {
+                user: {
+                    name: {
+                        first: 'Bob',
+                        last: 'Fox'
+                    }
+                }
+            }]
         })).toEqual([{
             user: {
                 name: 'Bob'
@@ -513,12 +529,13 @@ describe('filter filter', function() {
         var fn = parse('arr | filter:{name: "Jo"}:true');
         expect(fn({
             arr: [{
-                name: 'Jo'
+                name: "Jo"
             }, {
-                name: 'Joe'
+                name: "Joe"
             }]
         })).toEqual([{
-            name: 'Jo'
+            name: "Jo"
         }]);
     });
+
 });

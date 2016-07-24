@@ -30,4 +30,8 @@ describe('angularPublic', function() {
 
         expect(injector.has('$parse')).toBe(true);
     });
+
+    it('sets up the $rootScope', function() {
+
+    });
 });
