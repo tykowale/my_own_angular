@@ -1,12 +1,17 @@
 'use strict';
 
-var parse = require('../src/parse');
-var filter = require('../src/filter').filter;
+var publishExternalAPI = require('../src/angular_public');
+var createInjector = require('../src/injector');
 
 describe('filter filter', function() {
 
+    beforeEach(function() {
+        publishExternalAPI();
+    });
+
     it('is available', function() {
-        expect(filter('filter')).toBeDefined();
+        var injector = createInjector(['ng']);
+        expect(injector.has('filterFilter')).toBe(true);
     });
 
     it('can filter an array with a predicate function', function() {
