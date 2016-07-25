@@ -907,7 +907,6 @@ ASTCompiler.prototype.recurse = function(ast, context, create) {
                 this.addEnsureSafeFunction(callee);
                 return callee + '&&ensureSafeObject(' + callee + '(' + args.join(',') + '))';
             }
-            break;
         case AST.AssignmentExpression:
             var leftContext = {};
             this.recurse(ast.left, leftContext, true);
@@ -932,7 +931,6 @@ ASTCompiler.prototype.recurse = function(ast, context, create) {
                     ast.operator +
                     '(' + this.recurse(ast.right) + ')';
             }
-            break;
         case AST.LogicalExpression:
             intoId = this.nextId();
             this.state[this.state.computing].body.push(
@@ -1043,7 +1041,7 @@ function constantWatchDelegate(scope, listenerFn, valueEq, watchFn) {
         function() {
             return watchFn(scope);
         },
-        function(newValue, oldValue, scope) {
+        function() {
             if (_.isFunction(listenerFn)) {
                 listenerFn.apply(this, arguments);
             }
@@ -1059,7 +1057,8 @@ function oneTimeWatchDelegate(scope, listenerFn, valueEq, watchFn) {
     var unwatch = scope.$watch(
         function() {
             return watchFn(scope);
-        }, function(newValue, oldValue, scope) {
+        },
+        function(newValue, oldValue, scope) {
             lastValue = newValue;
             if (_.isFunction(listenerFn)) {
                 listenerFn.apply(this, arguments);
@@ -1083,7 +1082,8 @@ function oneTimeLiteralWatchDelegate(scope, listenerFn, valueEq, watchFn) {
     var unwatch = scope.$watch(
         function() {
             return watchFn(scope);
-        }, function(newValue, oldValue, scope) {
+        },
+        function(newValue, oldValue, scope) {
             if (_.isFunction(listenerFn)) {
                 listenerFn.apply(this, arguments);
             }
