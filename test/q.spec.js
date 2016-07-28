@@ -223,4 +223,15 @@ fdescribe('$q', function() {
 
         expect(fulfillSpy).toHaveBeenCalledWith('ok');
     });
+
+    it('can register a rejection handler with catch', function() {
+        var d = $q.defer();
+        var rejectSpy = jasmine.createSpy();
+
+        d.promise.catch(rejectSpy);
+        d.reject('fail');
+        $rootScope.$apply();
+
+        expect(rejectSpy).toHaveBeenCalled();
+    });
 });
