@@ -57,7 +57,9 @@ function $QProvider() {
 
             _.forEach(pending, function(handlers) {
                 var fn = handlers[state.status];
-                fn(state.value);
+                if (_.isFunction(fn)) {
+                    fn(state.value);
+                }
             });
         }
 
