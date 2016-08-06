@@ -152,11 +152,38 @@ function $QProvider() {
                 });
             }
 
+            function all(promises) {
+                var results = _.isArray(promises) ? [] : {};
+                var counter = 0;
+                var d = defer();
+
+                _.forEach(promises, function (promise, index) {
+                    counter++;
+                    when(promise).then(function (value) {
+                        results[index] = value;
+                        counter --;
+
+                        if(!counter) {
+                            d.resolve(results);
+                        }
+                    }, function (rejection) {
+                        d.reject(rejection);
+                    });
+                });
+
+                if(!counter) {
+                    d.resolve(results);
+                }
+
+                return d.promise;
+            }
+
             return {
                 defer: defer,
                 reject: reject,
                 when: when,
-                resolve: when
+                resolve: when,
+                all: all
             };
         }
     ];
