@@ -98,4 +98,101 @@ fdescribe('$http', function() {
 
         requests[0].onerror();
     });
+
+    it('uses GET method by default', function() {
+        $http({
+            url: 'http://www.google.com'
+        });
+
+        expect(requests.length).toBe(1);
+        expect(requests[0].method).toBe('GET');
+    });
+
+    it('sets headers on request', function() {
+        $http({
+            url: 'http://www.google.com',
+            headers: {
+                'Accept': 'text/plain',
+                'Cache-Control': 'no-cache'
+            }
+        });
+
+        expect(requests.length).toBe(1);
+        expect(requests[0].requestHeaders.Accept).toBe('text/plain');
+        expect(requests[0].requestHeaders['Cache-Control']).toBe('no-cache');
+    });
+
+    it('sets default headers on request', function() {
+        $http({
+            url: 'http://www.google.com'
+        });
+
+        expect(requests.length).toBe(1);
+        expect(requests[0].requestHeaders.Accept).toBe(
+            'application/json, text/plain, */*'
+        );
+    });
+
+    it('sets method-specific default headers on request', function() {
+        $http({
+            method: 'POST',
+            url: 'http://www.google.com',
+            data: '1738'
+        });
+
+        expect(requests.length).toBe(1);
+        expect(requests[0].requestHeaders['Content-Type']).toBe(
+            'application/json;charset=utf-8'
+        );
+    });
+
+    it('exposes default headers for overriding', function() {
+        $http.defaults.headers.post['Content-Type'] = 'text/plain;charset=utf-8';
+
+        $http({
+            method: 'POST',
+            url: 'http://www.google.com',
+            data: '1738'
+        });
+
+        expect(requests.length).toBe(1);
+        expect(requests[0].requestHeaders['Content-Type']).toBe(
+            'text/plain;charset=utf-8'
+        );
+    });
+
+    it('exposes default headers through provider', function() {
+        var injector = createInjector(['ng', function($httpProvider) {
+            $httpProvider.defaults.headers.post['Content-Type'] = 'text/plain;charset=utf-8';
+        }]);
+        $http = injector.get('$http');
+
+        $http({
+            method: 'POST',
+            url: 'http://www.google.com',
+            data: '1738'
+        });
+
+        expect(requests.length).toBe(1);
+        expect(requests[0].requestHeaders['Content-Type']).toBe(
+            'text/plain;charset=utf-8'
+        );
+    });
+
+    it('merges default headers case-insensitively', function() {
+        $http({
+            method: 'POST',
+            url: 'http://www.google.com',
+            data: '1738',
+            headers: {
+                'content-type': 'text/plain;charset=utf-8'
+            }
+        });
+
+        expect(requests.length).toBe(1);
+        expect(requests[0].requestHeaders['content-type']).toBe(
+            'text/plain;charset=utf-8'
+        );
+        expect(requests[0].requestHeaders['Content-Type']).toBeUndefined();
+    });
 });
